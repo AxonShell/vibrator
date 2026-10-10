@@ -1,0 +1,3 @@
+Filesystem created:        Thu Jan  1 01:00:00 1970
+Filesystem UUID:           429bc3ad-40a8-6209-1b14-93a45899cff0
+mkfs.erofs options:        -zlz4hc -T 0 -U 429bc3ad-40a8-6209-1b14-93a45899cff0 --mount-point=/vendor --fs-config-file=C:/Users/Delfraissy/Documents/miui/vibrator/working/vendor/config/vendor_fs_config --file-contexts=C:/Users/Delfraissy/Documents/miui/vibrator/working/vendor/config/vendor_file_contexts vendor_repack.img C:/Users/Delfraissy/Documents/miui/vibrator/working/vendor/vendor
