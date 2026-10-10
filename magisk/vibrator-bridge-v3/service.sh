@@ -32,8 +32,14 @@ log() {
     echo "binary_context_before=$(ls -Z "$BIN" 2>&1)"
 } >> "$LOG" 2>&1
 
-if [ ! -x "$BIN" ]; then
-    log "ERROR: bridge binary is missing or not executable; refusing launch."
+# Magisk extraction may leave the binary at mode 0644 even when the ZIP was
+# assembled incorrectly. Repair its executable bit before testing it.
+if [ -f "$BIN" ]; then
+    chmod 0755 "$BIN" >> "$LOG" 2>&1
+fi
+if [ ! -f "$BIN" ] || [ ! -x "$BIN" ]; then
+    log "ERROR: bridge binary is missing or still not executable after chmod; refusing launch."
+    ls -lZ "$BIN" >> "$LOG" 2>&1
     exit 1
 fi
 
