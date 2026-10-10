@@ -3,4 +3,6 @@ service vibrator-bridge /vendor/bin/hw/vibrator-bridge
     class hal
     user system
     group system
-    onrestart restart vibratorfeature-hal-service
+    # Do not restart the Xiaomi vibrator HAL if the bridge exits. A failed
+    # bridge must not create a vendor-HAL restart loop during boot.
+    oneshot
