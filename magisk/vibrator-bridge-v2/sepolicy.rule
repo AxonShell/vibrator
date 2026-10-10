@@ -1,0 +1,17 @@
+# v2: launch the bridge in the vibrator HAL domain instead of leaving it in magisk.
+# This is a targeted transition; it does not set SELinux permissive.
+type_transition magisk module_file:process hal_vibrator_default;
+allow magisk hal_vibrator_default:process transition;
+allow magisk module_file:file execute;
+allow magisk module_file:file open;
+allow magisk module_file:file read;
+allow magisk module_file:file getattr;
+allow magisk module_file:file map;
+allow hal_vibrator_default module_file:file entrypoint;
+allow hal_vibrator_default module_file:file execute;
+allow hal_vibrator_default module_file:file open;
+allow hal_vibrator_default module_file:file read;
+allow hal_vibrator_default module_file:file getattr;
+allow hal_vibrator_default module_file:file map;
+allow hal_vibrator_default hal_vibrator_service:service_manager add;
+allow hal_vibrator_default hal_vibrator_service:service_manager find;

@@ -1,0 +1,75 @@
+name: Build Vibrator Bridge v2 (SELinux domain fix)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "magisk/vibrator-bridge-v2/**"
+      - "vendor/bin/hw/vibrator-bridge"
+      - ".github/workflows/build-vibrator-bridge-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate bridge binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s vendor/bin/hw/vibrator-bridge
+          file vendor/bin/hw/vibrator-bridge
+          readelf -h vendor/bin/hw/vibrator-bridge | tee /tmp/elf-header.txt
+          grep -q "AArch64" /tmp/elf-header.txt
+          readelf -d vendor/bin/hw/vibrator-bridge | tee /tmp/elf-needed.txt || true
+          strings vendor/bin/hw/vibrator-bridge | grep -E 'android.hardware.vibrator.IVibrator|vibratorfeature|IVibrator/default' | head -n 40 | tee /tmp/bridge-strings.txt || true
+
+      - name: Assemble v2 Magisk module
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/zircon-vibrator-bridge
+          cp -a magisk/vibrator-bridge-v2/. build/zircon-vibrator-bridge/
+          cp vendor/bin/hw/vibrator-bridge build/zircon-vibrator-bridge/vibrator-bridge
+          chmod 0755 build/zircon-vibrator-bridge/service.sh
+          chmod 0755 build/zircon-vibrator-bridge/vibrator-bridge
+          test -s build/zircon-vibrator-bridge/module.prop
+          test -s build/zircon-vibrator-bridge/service.sh
+          test -s build/zircon-vibrator-bridge/sepolicy.rule
+          cd build/zircon-vibrator-bridge
+          zip -r ../../zircon-vibrator-bridge-magisk-v2.zip .
+          unzip -l ../../zircon-vibrator-bridge-magisk-v2.zip | tee ../../zip-list.txt
+          unzip -p ../../zircon-vibrator-bridge-magisk-v2.zip module.prop | grep -q '^id=zircon_vibrator_bridge$'
+          unzip -p ../../zircon-vibrator-bridge-magisk-v2.zip service.sh | grep -q 'service.log'
+
+      - name: Save binary analysis report
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Bridge ELF dependencies"
+            echo '---'
+            cat /tmp/elf-needed.txt 2>/dev/null || true
+            echo
+            echo "## Relevant bridge strings"
+            echo '---'
+            cat /tmp/bridge-strings.txt 2>/dev/null || true
+            echo
+            echo "## ZIP entries"
+            echo '---'
+            cat zip-list.txt 2>/dev/null || true
+          } > bridge-build-report.md
+
+      - name: Upload installable module
+        uses: actions/upload-artifact@v4
+        with:
+          name: zircon-vibrator-bridge-magisk-v2
+          path: |
+            zircon-vibrator-bridge-magisk-v2.zip
+            bridge-build-report.md
+          if-no-files-found: error
