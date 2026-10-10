@@ -1,0 +1,6 @@
+id=zircon_vibrator_bridge
+name=Zircon Vibrator Bridge (v3 scoped executable label)
+version=0.3.0
+versionCode=3
+author=AxonShell
+description=Experimental bridge with a per-executable SELinux label and verified HAL-domain launch.

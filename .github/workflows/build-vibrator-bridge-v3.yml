@@ -1,0 +1,80 @@
+name: Build Zircon Vibrator Bridge v3
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "magisk/vibrator-bridge-v3/**"
+      - "vendor/bin/hw/vibrator-bridge"
+      - ".github/workflows/build-vibrator-bridge-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate bridge binary and v3 policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s vendor/bin/hw/vibrator-bridge
+          file vendor/bin/hw/vibrator-bridge
+          readelf -h vendor/bin/hw/vibrator-bridge | tee /tmp/elf-header.txt
+          grep -q "AArch64" /tmp/elf-header.txt
+          readelf -d vendor/bin/hw/vibrator-bridge | tee /tmp/elf-needed.txt || true
+          strings vendor/bin/hw/vibrator-bridge | grep -E 'android.hardware.vibrator.IVibrator|vibratorfeature|IVibrator/default' | head -n 40 | tee /tmp/bridge-strings.txt || true
+          grep -q 'type_transition magisk hal_vibrator_default_exec:process hal_vibrator_default;' magisk/vibrator-bridge-v3/sepolicy.rule
+          grep -q 'chcon "$EXPECTED_EXEC" "$BIN"' magisk/vibrator-bridge-v3/service.sh
+          grep -q 'process_domain=' magisk/vibrator-bridge-v3/service.sh
+          sh -n magisk/vibrator-bridge-v3/service.sh
+
+      - name: Assemble v3 Magisk module
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/zircon-vibrator-bridge
+          cp -a magisk/vibrator-bridge-v3/. build/zircon-vibrator-bridge/
+          cp vendor/bin/hw/vibrator-bridge build/zircon-vibrator-bridge/vibrator-bridge
+          chmod 0755 build/zircon-vibrator-bridge/service.sh
+          chmod 0755 build/zircon-vibrator-bridge/vibrator-bridge
+          test -s build/zircon-vibrator-bridge/module.prop
+          test -s build/zircon-vibrator-bridge/service.sh
+          test -s build/zircon-vibrator-bridge/sepolicy.rule
+          cd build/zircon-vibrator-bridge
+          zip -r ../../zircon-vibrator-bridge-magisk-v3.zip .
+          unzip -l ../../zircon-vibrator-bridge-magisk-v3.zip | tee ../../zip-list.txt
+          unzip -p ../../zircon-vibrator-bridge-magisk-v3.zip module.prop | grep -q '^id=zircon_vibrator_bridge$'
+          unzip -p ../../zircon-vibrator-bridge-magisk-v3.zip module.prop | grep -q '^version=0.3.0$'
+          unzip -p ../../zircon-vibrator-bridge-magisk-v3.zip service.sh | grep -q 'framework_service_registered'
+
+      - name: Save diagnostic report
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Bridge ELF dependencies"
+            echo '---'
+            cat /tmp/elf-needed.txt 2>/dev/null || true
+            echo
+            echo "## Relevant bridge strings"
+            echo '---'
+            cat /tmp/bridge-strings.txt 2>/dev/null || true
+            echo
+            echo "## ZIP entries"
+            echo '---'
+            cat zip-list.txt 2>/dev/null || true
+          } > bridge-build-report.md
+
+      - name: Upload installable module
+        uses: actions/upload-artifact@v4
+        with:
+          name: zircon-vibrator-bridge-magisk-v3
+          path: |
+            zircon-vibrator-bridge-magisk-v3.zip
+            bridge-build-report.md
+          if-no-files-found: error
