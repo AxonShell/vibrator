@@ -1399,3 +1399,4 @@
 /sys/class/thermal/thermal_message/market_download_limit                 u:object_r:sys_thermal_market_download_limit:s0
 /sys/devices/virtual/touch/touch_dev/pen_connect_strategy              u:object_r:sysfs_pen_connect_strategy_node:s0
 /sys/devices/virtual/thermal/thermal_message/market_download_limit       u:object_r:sys_thermal_market_download_limit:s0
+/(vendor|system/vendor)/bin/hw/vibrator-bridge    u:object_r:hal_vibrator_default_exec:s0
