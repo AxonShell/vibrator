@@ -1,0 +1,40 @@
+name: Build Magisk module
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "magisk/vibrator-bridge/**"
+      - "vendor/bin/hw/vibrator-bridge"
+      - ".github/workflows/build-magisk-module.yml"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Assemble module
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/zircon-vibrator-bridge
+          cp -a magisk/vibrator-bridge/. build/zircon-vibrator-bridge/
+          cp vendor/bin/hw/vibrator-bridge build/zircon-vibrator-bridge/vibrator-bridge
+          chmod 0755 build/zircon-vibrator-bridge/service.sh
+          chmod 0755 build/zircon-vibrator-bridge/vibrator-bridge
+          test -s build/zircon-vibrator-bridge/vibrator-bridge
+          file build/zircon-vibrator-bridge/vibrator-bridge
+          cd build
+          zip -r ../zircon-vibrator-bridge-magisk.zip zircon-vibrator-bridge
+          unzip -l ../zircon-vibrator-bridge-magisk.zip
+
+      - name: Upload installable module
+        uses: actions/upload-artifact@v4
+        with:
+          name: zircon-vibrator-bridge-magisk
+          path: zircon-vibrator-bridge-magisk.zip
+          if-no-files-found: error
