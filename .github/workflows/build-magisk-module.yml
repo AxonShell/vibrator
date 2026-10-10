@@ -28,9 +28,9 @@ jobs:
           chmod 0755 build/zircon-vibrator-bridge/vibrator-bridge
           test -s build/zircon-vibrator-bridge/vibrator-bridge
           file build/zircon-vibrator-bridge/vibrator-bridge
-          cd build
-          zip -r ../zircon-vibrator-bridge-magisk.zip zircon-vibrator-bridge
-          unzip -l ../zircon-vibrator-bridge-magisk.zip
+          cd build/zircon-vibrator-bridge
+          zip -r ../../zircon-vibrator-bridge-magisk.zip .
+          unzip -l ../../zircon-vibrator-bridge-magisk.zip
 
       - name: Upload installable module
         uses: actions/upload-artifact@v4
