@@ -1,0 +1,6 @@
+id=zircon_vibrator_bridge
+name=Zircon Vibrator Bridge
+version=0.1.0
+versionCode=1
+author=AxonShell
+description=Experimental Magisk module to launch the Xiaomi vibrator AIDL bridge on zircon devices.

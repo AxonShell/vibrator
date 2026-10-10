@@ -1,0 +1,14 @@
+# Experimental Binder/service-manager access for a bridge launched by Magisk.
+# These rules do not change the global SELinux enforcement mode.
+allow magisk hal_vibrator_service service_manager find
+allow magisk hal_vibrator_service service_manager add
+allow magisk hal_vibrator_default binder call
+allow magisk hal_vibrator_default binder transfer
+allow hal_vibrator_default magisk binder call
+allow hal_vibrator_default magisk binder transfer
+allow magisk module_file file execute
+allow magisk module_file file execute_no_trans
+allow magisk module_file file open
+allow magisk module_file file read
+allow magisk module_file file getattr
+allow magisk module_file file map
