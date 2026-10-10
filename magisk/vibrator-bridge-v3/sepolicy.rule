@@ -1,0 +1,13 @@
+# v3: transition only when the bridge executable has the dedicated HAL exec type.
+# service.sh labels this one module binary as hal_vibrator_default_exec before exec.
+type_transition magisk hal_vibrator_default_exec:process hal_vibrator_default;
+allow magisk hal_vibrator_default:process transition;
+
+# Permit Magisk's service script to relabel only toward the existing vibrator exec type.
+# The source type is the observed system_file label on the module binary.
+allow magisk system_file:file relabelfrom;
+allow magisk hal_vibrator_default_exec:file relabelto;
+
+# Execute the bridge from the Magisk module and use the dedicated type as entrypoint.
+allow magisk hal_vibrator_default_exec:file { execute open read getattr map };
+allow hal_vibrator_default hal_vibrator_default_exec:file { entrypoint execute open read getattr map };
